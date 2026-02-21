@@ -1,0 +1,249 @@
+services:
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: portainer
+    ports:
+      - 9443:9443
+    volumes:
+      - /docker/portainer/data:/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9000/api/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  plex:
+    image: plexinc/pms-docker
+    container_name: plex
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - VERSION=docker
+      - HOSTNAME="mediaServer"
+    volumes:
+      - /docker/plex/config:/config
+      - /vault/data/media:/data/media
+    network_mode: host
+    restart: unless-stopped
+
+  radarr:
+    image: linuxserver/radarr
+    container_name: radarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Copenhagen
+    volumes:
+      - /docker/radarr/config:/config
+      - /vault/data:/data
+    ports:
+      - "7878:7878"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7878"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  sonarr:
+    image: linuxserver/sonarr
+    container_name: sonarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Copenhagen
+    volumes:
+      - /docker/sonarr/config:/config
+      - /vault/data:/data
+    ports:
+      - "8989:8989"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8989"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  prowlarr:
+    image: linuxserver/prowlarr
+    container_name: prowlarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Copenhagen
+    volumes:
+      - /docker/prowlarr/config:/config
+    ports:
+      - 9696:9696
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9696"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  bazarr:
+    image: linuxserver/bazarr
+    container_name: bazarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Copenhagen
+    volumes:
+      - /docker/bazarr/config:/config
+      - /vault/data:/data
+    ports:
+      - "6767:6767"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6767"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  sabnzbd:
+    image: lscr.io/linuxserver/sabnzbd:latest
+    container_name: sabnzbd
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Sofia
+    volumes:
+      - /docker/sabnzbd/config:/config
+      - /vault/data/usenet:/data/usenet
+    ports:
+      - 8080:8080
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  overseerr:
+    image: lscr.io/linuxserver/overseerr:latest
+    container_name: overseerr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Copenhagen
+    volumes:
+      - /docker/overseerr/config:/config
+    ports:
+      - 5055:5055
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5055"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  notifiarr:
+    image: golift/notifiarr
+    container_name: notifiarr
+    ports:
+      - "5454:5454"
+    volumes:
+      - /docker/notifiarr/config:/config
+      - /var/run/utmp:/var/run/utmp
+      - /etc/machine-id:/etc/machine-id
+    restart: unless-stopped
+
+  requestrr:
+    image: thomst08/requestrr
+    container_name: requestrr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Copenhagen
+    volumes:
+      - /docker/requestrr/config:/config
+    ports:
+      - 4545:4545
+    restart: unless-stopped
+
+  kavita:
+    image: lscr.io/linuxserver/kavita:latest
+    container_name: kavita
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Copenhagen
+    volumes:
+      - /docker/kavita/config:/config
+      - /vault/data/media:/data/media
+    ports:
+      - 5000:5000
+    restart: unless-stopped
+
+  tautulli:
+    image: lscr.io/linuxserver/tautulli:latest
+    container_name: tautulli
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Copenhagen
+    volumes:
+      - /docker/tautulli/config:/config
+    ports:
+      - 8181:8181
+    restart: unless-stopped
+
+  gluetun:
+    image: qmcgaw/gluetun
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      - VPN_SERVICE_PROVIDER=${VPN_SERVICE_PROVIDER:-nordvpn}
+      - VPN_TYPE=${VPN_TYPE:-openvpn}
+      - OPENVPN_USER=${OPENVPN_USER}
+      - OPENVPN_PASSWORD=${OPENVPN_PASSWORD}
+      - SERVER_COUNTRIES=${SERVER_COUNTRIES:-Denmark}
+    volumes:
+      - /docker/gluetun:/config
+    ports:
+      - 8085:8085
+      - 6881:6881
+      - 6881:6881/udp
+    restart: always
+
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    network_mode: "service:gluetun"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Berlin
+      - WEBUI_PORT=8085
+    volumes:
+      - /docker/qbittorrent:/config
+      - /vault/data/torrents:/data/torrents
+    depends_on:
+      gluetun:
+        condition: service_healthy
+
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    environment:
+      - LOG_LEVEL=info
+      - TZ=Europe/Copenhagen
+    ports:
+      - "8191:8191"
+    restart: unless-stopped
+
+  autoheal:
+    image: willfarrell/autoheal
+    container_name: autoheal
+    environment:
+      - AUTOHEAL_CONTAINER_LABEL=all
+      - AUTOHEAL_INTERVAL=10
+      - AUTOHEAL_START_PERIOD=30
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
