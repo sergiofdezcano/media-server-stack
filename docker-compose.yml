@@ -122,9 +122,10 @@ services:
       timeout: 10s
       retries: 3
 
-  overseerr:
-    image: lscr.io/linuxserver/overseerr:latest
-    container_name: overseerr
+  seerr:
+    image: ghcr.io/seerr-team/seerr:latest
+    init: true
+    container_name: seerr
     environment:
       - PUID=1000
       - PGID=1000
